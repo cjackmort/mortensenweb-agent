@@ -65,7 +65,8 @@ The pull request description:
 
 1. First line: the `<!-- agent-job:... -->` marker, copied verbatim from the issue.
 2. If escalating: the `<!-- agent-escalation: reason -->` line, then what you would need.
-3. Then, **for the owner** — two to five short sentences. What is different now and where on the site ("The services section now shows the new photo, with $120 under it"). Anything you deliberately did not do and why ("I left the header phone number alone because the request only mentioned the footer"). No file names, no HTML, no jargon. This text appears in their portal beside the approve button.
+3. Then, **for the owner**, between a `<!-- client-summary -->` line and a `<!-- /client-summary -->` line: one short, plain paragraph of two to four sentences. What you worked on and what is different now, and where on the site ("We've put the new photo in your services section, with $120 under it"). Anything you deliberately did not do and why, in the same plain words ("We left the phone number at the top alone, since you only mentioned the footer"). No lists, no headings, no file names, no HTML, no jargon. Only this paragraph appears in their portal, beside the approve button.
+4. After the closing line, anything for the agency: files changed, caveats, what to check. No sign-off.
 
 ## 7. Record what you learned
 

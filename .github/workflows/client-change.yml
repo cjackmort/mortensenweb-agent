@@ -142,6 +142,12 @@ jobs:
           # actor is a bot — and the action refuses bot actors unless named.
           allowed_bots: "mortensen-web-portal[bot]"
 
+          # No "Generated with Claude Code" line in the pull request and no
+          # co-author trailer on the commits. The description is read by a
+          # client in the portal, and the commits are the client's history.
+          settings: |
+            {"attribution": {"commit": "", "pr": ""}, "includeCoAuthoredBy": false}
+
           # Bash is what actually opens the pull request. Without an explicit
           # allowlist a run reads the issue, works out what to do, finds it has
           # no way to do it, and exits *successfully* having produced nothing.
@@ -289,9 +295,20 @@ jobs:
             as the first line of your pull request description.** Without it the
             portal cannot match your pull request to the client's request.
 
-            After the marker, write for the website's owner, who is not
-            technical and will read this on a phone next to an "approve"
-            button. Two to five short sentences: what is different now, where
-            on the site, and anything you deliberately did not do and why. No
-            file names, no code, no jargon. This text is shown to them in the
-            portal exactly as you write it.
+            After the marker, write for the website's owner between these
+            two lines, each on its own line:
+
+            `<!-- client-summary -->`
+            `<!-- /client-summary -->`
+
+            Inside them: **one short, plain paragraph** — two to four
+            sentences — saying what you worked on and what is different on
+            their site now, and where. Write it to them ("We've…"), the way you
+            would say it on the phone. The owner is not technical and reads
+            this beside an "approve" button, so: no lists, no headings, no file
+            names, no code, no technical words. If you left something out on
+            purpose, say so in plain terms in the same paragraph. Only this
+            paragraph is shown to them.
+
+            Anything for the agency — files changed, caveats, what to check —
+            goes after the closing line. Do not add a sign-off.
