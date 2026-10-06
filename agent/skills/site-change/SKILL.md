@@ -47,19 +47,26 @@ npm run build
 node .claude/skills/site-change/scripts/check.mjs dist
 ```
 
+**A site with no build step** — no `package.json`, or no `build` script in it — is hand-written HTML published as committed. `netlify.toml` says where from (`publish = "."` is the repository root). Skip the build and point the checker at that directory instead:
+
+```bash
+node .claude/skills/site-change/scripts/check.mjs .
+```
+
 The checker fails on: a link or image that does not resolve to a file, an image with no `alt`, an image loaded from another site, lorem ipsum, a page with no `<title>`. Fix every error. Read the warnings: a placeholder you did not introduce is fine to leave; one you introduced is not.
 
-If the site has no `npm run build`, or the build fails for a reason unrelated to your change, escalate with the build output in the reason.
+If the build fails for a reason unrelated to your change, escalate with the build output in the reason.
 
 ## 6. Commit, push, open the pull request
 
-Branch from the default branch: `portal/<issue-number>-<short-slug>`. One commit is fine. Commit any downloaded photos.
+Branch from the default branch: `portal/<issue-number>-<short-slug>`. A second attempt is the exception: branch from the earlier attempt, as the issue's "This is a second attempt" section shows. One commit is fine. Commit any downloaded photos.
 
 The pull request description:
 
 1. First line: the `<!-- agent-job:... -->` marker, copied verbatim from the issue.
 2. If escalating: the `<!-- agent-escalation: reason -->` line, then what you would need.
-3. Then, **for the owner** — two to five short sentences. What is different now and where on the site ("The services section now shows the new photo, with $120 under it"). Anything you deliberately did not do and why ("I left the header phone number alone because the request only mentioned the footer"). No file names, no HTML, no jargon. This text appears in their portal beside the approve button.
+3. Then, **for the owner**, between a `<!-- client-summary -->` line and a `<!-- /client-summary -->` line: one short, plain paragraph of two to four sentences. What you worked on and what is different now, and where on the site ("We've put the new photo in your services section, with $120 under it"). Anything you deliberately did not do and why, in the same plain words ("We left the phone number at the top alone, since you only mentioned the footer"). No lists, no headings, no file names, no HTML, no jargon. Only this paragraph appears in their portal, beside the approve button.
+4. After the closing line, anything for the agency: files changed, caveats, what to check. No sign-off.
 
 ## 7. Record what you learned
 

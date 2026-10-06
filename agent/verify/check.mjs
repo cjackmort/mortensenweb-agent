@@ -37,7 +37,10 @@ function walk(dir) {
     const full = join(dir, entry);
     const stat = statSync(full);
     if (stat.isDirectory()) {
-      if (entry === "__preview") continue;
+      // Skipped so the checker can be pointed at a repository root — a site
+      // with no build step publishes "." — without reading the agent's own
+      // skills, git internals, or installed packages as pages of the site.
+      if (entry === "__preview" || entry === "node_modules" || entry.startsWith(".")) continue;
       out.push(...walk(full));
     } else out.push(full);
   }
