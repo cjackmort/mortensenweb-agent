@@ -6,7 +6,9 @@
  *
  * Exit code 1 when anything is an *error* — a link or image that points at a
  * file that does not exist, an image with no alt attribute, a page with no
- * title, an image loaded from another site. Warnings (placeholder text still
+ * title, an image loaded from another site, a site-wide X-Frame-Options header
+ * or a frame-ancestors rule that shuts out the portal (both break the portal's
+ * live thumbnail of the site). Warnings (placeholder text still
  * present, very large images, a page with no h1) are reported but do not
  * fail, because a site scaffolded with placeholders is allowed to be deployed
  * to a preview; it is not allowed to have broken references.
@@ -127,6 +129,42 @@ for (const page of pages) {
 
 if (pages.length === 0) errors.push({ page: "(site)", message: "No HTML pages found in the build output." });
 if (!existsSync(join(root, "index.html"))) errors.push({ page: "(site)", message: "No index.html at the site root." });
+
+// Framing. The portal shows each client's live site in its Clients grid, inside a
+// frame, so a site must let https://portal.mortensenweb.com frame it. X-Frame-Options
+// has no allow-list: SAMEORIGIN and DENY both block the portal, so it must not be sent
+// at all; frame-ancestors does the same anti-clickjacking job with the portal allowed.
+// Read from the site-wide rule ("/*") in netlify.toml and in the built _headers.
+const PORTAL = "https://portal.mortensenweb.com";
+
+function siteWideHeaderRules() {
+  const rules = [];
+  const toml = join(process.cwd(), "netlify.toml");
+  if (existsSync(toml)) {
+    const blocks = readFileSync(toml, "utf8").replace(/^\s*#.*$/gm, "").split(/\[\[headers\]\]/).slice(1);
+    for (const block of blocks) if (/for\s*=\s*["']\/\*?["']/.test(block)) rules.push({ file: "netlify.toml", text: block });
+  }
+  const headersFile = join(root, "_headers");
+  if (existsSync(headersFile)) {
+    const sections = readFileSync(headersFile, "utf8").replace(/^\s*#.*$/gm, "").split(/^(?=\S)/m);
+    for (const section of sections) if (/^\/\*?\s*$/.test(section.split("\n")[0])) rules.push({ file: "_headers", text: section });
+  }
+  return rules;
+}
+
+const framingRules = siteWideHeaderRules();
+for (const { file, text } of framingRules) {
+  if (/X-Frame-Options/i.test(text)) {
+    errors.push({ page: file, message: `X-Frame-Options blocks the portal's live thumbnail. Remove it and send Content-Security-Policy: frame-ancestors 'self' ${PORTAL}.` });
+  }
+  const ancestors = text.match(/frame-ancestors([^;"\n]*)/i);
+  if (ancestors && !ancestors[1].includes(PORTAL)) {
+    errors.push({ page: file, message: `frame-ancestors${ancestors[1].trimEnd()} shuts out the portal. Use frame-ancestors 'self' ${PORTAL}.` });
+  }
+}
+if (!framingRules.some(({ text }) => /frame-ancestors[^;\n]*portal\.mortensenweb\.com/i.test(text))) {
+  warnings.push({ page: "(site)", message: `No site-wide frame-ancestors rule allowing ${PORTAL}. Add Content-Security-Policy: frame-ancestors 'self' ${PORTAL} so the portal can show the live site.` });
+}
 
 const result = { pages: pages.length, errors, warnings };
 
