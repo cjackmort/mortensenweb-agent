@@ -8,10 +8,12 @@
  * file that does not exist, an image with no alt attribute, a page with no
  * title, an image loaded from another site, a site-wide X-Frame-Options header
  * or a frame-ancestors rule that shuts out the portal (both break the portal's
- * live thumbnail of the site). Warnings (placeholder text still
- * present, very large images, a page with no h1) are reported but do not
- * fail, because a site scaffolded with placeholders is allowed to be deployed
- * to a preview; it is not allowed to have broken references.
+ * live thumbnail of the site), a `[PLACEHOLDER…]` or `[SAMPLE…]` marker, or any
+ * of the invented customer quotes, figures and licence number the site
+ * template used to ship (see TEMPLATE_SAMPLE_TEXT). On a live client site those
+ * are a false endorsement or a false licence claim, so they block the deploy,
+ * previews included. Warnings (other [BRACKETED CAPS] text still present, very
+ * large images, a page with no h1) are reported but do not fail.
  *
  * Why these checks and not a validator: the failures that reach a client are
  * almost never invalid HTML. They are a renamed image whose old path is still
@@ -62,6 +64,48 @@ const H1 = /<h1[\s>]/i;
 const PLACEHOLDER = /\[[A-Z][A-Z0-9 ,.'’\-—–/]{2,}\]/g;
 const LOREM = /lorem ipsum/i;
 
+// Markers that mean "this fact is invented or missing". Any of them on a built
+// page fails the deploy: a page that says [PLACEHOLDER: licence number] is one
+// edit away from a made-up number in its place. PLACEHOLDER matches in any case;
+// SAMPLE only in capitals, so a real "[Sample menu]" is not caught.
+const HARD_MARKERS = [/\[\s*placeholder\b[^\]\n]{0,60}\]?/gi, /\[SAMPLE\b[^\]\n]{0,60}\]?/g];
+const isHardMarker = (text) => /^\[\s*placeholder\b/i.test(text) || text.startsWith("[SAMPLE");
+
+// The invented proof the client-site template used to ship as its default
+// content: three 5-star quotes, three figures, a review count and a plumber
+// licence number. They are matched as plain text (tags stripped, comments kept,
+// so a block someone commented out still counts) because on a real business
+// every one of them is a false statement. Never remove an entry from this list.
+const TEMPLATE_SAMPLE_TEXT = [
+  "Called at 11pm with water coming through the ceiling",
+  "Quoted me half what the last company wanted for the same water heater",
+  "Third plumber I tried and the only one who actually found the leak",
+  "NJ Master Plumber License #12345",
+  "500+ 5-star reviews",
+  "27+ Years in business",
+  "12,000+ Jobs completed",
+  "4.9/5 Average rating",
+];
+
+const ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", middot: "·", hellip: "…", ndash: "–", mdash: "—", lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”" };
+
+/** What a visitor (or a crawler) reads: tags gone, comments' words kept, entities decoded, spaces collapsed. */
+function pageText(html) {
+  return html
+    .replace(/<!--\s*-->/g, "") // React's text separators: "12,000<!-- -->+" is "12,000+"
+    .replace(/<!--([\s\S]*?)-->/g, " $1 ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&(?:#(\d+)|#x([0-9a-f]+)|([a-z]+));/gi, (whole, dec, hex, name) => {
+      if (name) return ENTITIES[name.toLowerCase()] ?? whole;
+      try {
+        return String.fromCodePoint(dec ? Number(dec) : parseInt(hex, 16));
+      } catch {
+        return whole; // a code point out of range: leave the text as written
+      }
+    })
+    .replace(/\s+/g, " ");
+}
+
 function resolveLocal(fromPage, target) {
   // Strip query and hash, decode percent-encoding.
   let path = target.split("#")[0].split("?")[0];
@@ -87,7 +131,15 @@ for (const page of pages) {
   if (!title) errors.push({ page: rel, message: "No <title>." });
   if (!H1.test(html)) warnings.push({ page: rel, message: "No <h1> on the page." });
 
-  const placeholders = html.match(PLACEHOLDER) ?? [];
+  // [PLACEHOLDER…] and [SAMPLE…] are errors; any other [BRACKETED CAPS] only warn.
+  const markers = [...new Set(HARD_MARKERS.flatMap((re) => html.match(re) ?? []).map((m) => m.trim()))];
+  if (markers.length) {
+    errors.push({
+      page: rel,
+      message: `${markers.length} placeholder marker${markers.length === 1 ? "" : "s"} still present: ${markers.slice(0, 5).join(", ")}. Replace each with something the client gave us, or delete the claim.`,
+    });
+  }
+  const placeholders = (html.match(PLACEHOLDER) ?? []).filter((p) => !isHardMarker(p));
   if (placeholders.length) {
     warnings.push({
       page: rel,
@@ -95,6 +147,16 @@ for (const page of pages) {
     });
   }
   if (LOREM.test(html)) errors.push({ page: rel, message: "Lorem ipsum in shipped copy." });
+
+  const text = pageText(html);
+  for (const sample of TEMPLATE_SAMPLE_TEXT) {
+    if (text.includes(sample)) {
+      errors.push({
+        page: rel,
+        message: `Invented template text still on the page: "${sample}". It is not about this business. Delete it, or use only what the client can prove.`,
+      });
+    }
+  }
 
   for (const tag of html.match(IMG) ?? []) {
     if (!ALT.test(tag)) errors.push({ page: rel, message: `<img> without alt: ${tag.slice(0, 80)}` });

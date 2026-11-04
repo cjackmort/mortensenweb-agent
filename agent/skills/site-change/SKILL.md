@@ -53,7 +53,7 @@ node .claude/skills/site-change/scripts/check.mjs dist
 node .claude/skills/site-change/scripts/check.mjs .
 ```
 
-The checker fails on: a link or image that does not resolve to a file, an image with no `alt`, an image loaded from another site, lorem ipsum, a page with no `<title>`. Fix every error. Read the warnings: a placeholder you did not introduce is fine to leave; one you introduced is not.
+The checker fails on: a link or image that does not resolve to a file, an image with no `alt`, an image loaded from another site, lorem ipsum, a page with no `<title>`, any `[PLACEHOLDER…]` or `[SAMPLE…]` marker, and the invented quotes, figures and licence number the site template used to ship. Fix every error: delete the invented text rather than rewording it. Read the warnings: another bracketed placeholder you did not introduce is fine to leave; one you introduced is not.
 
 If the build fails for a reason unrelated to your change, escalate with the build output in the reason.
 

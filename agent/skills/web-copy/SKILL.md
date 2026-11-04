@@ -3,7 +3,7 @@ name: web-copy
 description: >
   This skill should be used when writing the words on a website — when the user asks to
   "write the copy", "write a headline", "what should the hero say", "write the about page",
-  "make the CTA better", "write FAQs", "write testimonials placeholder", or when site-builder
+  "make the CTA better", "write FAQs", "add testimonials", or when site-builder
   needs page copy. Produces specific, conversion-oriented, GEO-friendly copy in a voice that
   matches the design archetype.
 metadata:
@@ -12,7 +12,7 @@ metadata:
 
 # Web Copy
 
-Copy is the part of the site the reader actually uses. Write for one person with one problem, in the voice the archetype implies, and never ship Lorem ipsum or generic filler. Every placeholder claim that must be verified (numbers, names, quotes) is marked `[SAMPLE]` in a comment and listed in the delivery message.
+Copy is the part of the site the reader actually uses. Write for one person with one problem, in the voice the archetype implies, and never ship Lorem ipsum or generic filler. Never write a number, name, quote, rating, licence, certification or year in business that the client did not give you: on a live site each one is a legal problem for the client. A fact you do not have is left out, and the delivery message lists what is missing. The deploy check fails any page that carries a `[PLACEHOLDER…]` or `[SAMPLE…]` marker.
 
 ## Voice by archetype
 
@@ -49,7 +49,9 @@ Verb + outcome, first person optional: "Book a free audit", "See the menu", "Get
 
 ## Testimonials and social proof without real data
 
-Write 2–3 **clearly marked** sample testimonials in the customer's likely voice, with realistic specifics and a placeholder name/role (`— [Name], owner, [Business]`). Wrap them in `<!-- [SAMPLE] replace with real testimonial -->`. Never present fabricated reviews as real; never add `aggregateRating` schema for them. Same for stats: use `[SAMPLE: 1,200+ installs]` phrasing in comments and a plausible value on the page only if the user approved samples.
+Do not write testimonials, review counts, star ratings, customer names, stats or licence numbers. Not as samples, not as drafts, not in a comment or a hidden block: a made-up quote sitting in a page's source is still a made-up quote, and the deploy check fails on the markers and on the old template's invented text. The site template shows no section for an empty `testimonials`, `stats` or `faq` list, so leave the list empty and move on. Never add `aggregateRating` schema without a rating and a count the client can show you the source of.
+
+Use only what the client supplied: their real review quotes with the name they allow and where it came from ("via Google"), figures they gave you, a licence number they read out. Put what is missing in the delivery message as a question ("No reviews yet. Send two or three quotes you are happy to publish, with the customer's first name"), so the client can supply it. Until they do, lead with proof that exists today: the services, the process, the service area, a photo of the work.
 
 ## Microcopy
 
@@ -65,4 +67,4 @@ Primary query in H1 and first 100 words; H2s as questions; specifics over adject
 
 ## Output
 
-Deliver copy per section in the order of the page cadence, ready to paste into components; list every `[SAMPLE]` item at the end.
+Deliver copy per section in the order of the page cadence, ready to paste into components; list at the end every fact you did not have and had to leave out.
